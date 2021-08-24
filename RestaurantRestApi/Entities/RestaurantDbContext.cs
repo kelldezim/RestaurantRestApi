@@ -12,6 +12,8 @@ namespace RestaurantRestApi.Entities
         public DbSet<Restaurant> Restaurants { get; set; }
         public DbSet<Address> Addresses { get; set; }
         public DbSet<Dish> Dishes { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<Role> Roles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -34,6 +36,13 @@ namespace RestaurantRestApi.Entities
                 .IsRequired()
                 .HasMaxLength(50);
 
+            modelBuilder.Entity<User>()
+                .Property(p => p.Email)
+                .IsRequired();
+
+            modelBuilder.Entity<Role>()
+                .Property(p => p.Name)
+                .IsRequired();
             //DataSeed -- required new migration
             //modelBuilder.Entity<Restaurant>()
             //.HasData()
