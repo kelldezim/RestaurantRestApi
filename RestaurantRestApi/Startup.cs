@@ -40,6 +40,7 @@ namespace RestaurantRestApi
             Configuration.GetSection("Authentication").Bind(authenticationSettinngs);
 
             //when we wan to use any of those services inside the target service we have to inject the interface them via its constructor
+            services.AddSingleton(authenticationSettinngs);
             services.AddAuthentication(option =>
             {
                 option.DefaultAuthenticateScheme = "Bearer";
