@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using RestaurantRestApi.DtoModels;
 using RestaurantRestApi.DtoModels.Validators;
@@ -18,6 +19,7 @@ using RestaurantRestApi.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace RestaurantRestApi
@@ -34,7 +36,26 @@ namespace RestaurantRestApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var authenticationSettinngs = new AuthenticationSettings();
+            Configuration.GetSection("Authentication").Bind(authenticationSettinngs);
+
             //when we wan to use any of those services inside the target service we have to inject the interface them via its constructor
+            services.AddAuthentication(option =>
+            {
+                option.DefaultAuthenticateScheme = "Bearer";
+                option.DefaultScheme = "Bearer";
+                option.DefaultChallengeScheme = "Bearer";
+            }).AddJwtBearer(cfg =>
+            {
+                cfg.RequireHttpsMetadata = false; // doesn't require from client using https
+                cfg.SaveToken = true; // token should be saved for authentication
+                cfg.TokenValidationParameters = new TokenValidationParameters //define validation parameters for token
+                {
+                    ValidIssuer = authenticationSettinngs.JwtIssuer, //who issue token
+                    ValidAudience = authenticationSettinngs.JwtIssuer, //who can use the token --> here is the same with issuer because we doing it for local
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authenticationSettinngs.JwtKey)),
+                };
+            });
             services.AddControllers().AddFluentValidation();
             services.AddDbContext<RestaurantDbContext>();
             services.AddScoped<RestaurantSeeder>();
@@ -67,6 +88,7 @@ namespace RestaurantRestApi
             app.UseMiddleware<RequestTimeMiddleware>();
 
             app.UseHttpsRedirection();
+            app.UseAuthentication();
 
             app.UseRouting();
 
